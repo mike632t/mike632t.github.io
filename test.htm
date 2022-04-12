@@ -1,0 +1,818 @@
+<div style="border-color:#d2d0ce; border-style:solid; border-width:1px; border-radius:5px; background:#f7f7f7; padding:10px; line-height:133%; font-family:monospace; white-space:nowrap; white-space:pre; overflow:auto; font-size:10pt; color:#696969;"><span style="color:slategray;">/*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&#120;11&#045;calc&#046;c&nbsp;&#045;&nbsp;RPN&nbsp;(Reverse&nbsp;Polish)&nbsp;calculator&nbsp;simulator&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;Copyright(C)&nbsp;2019&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;Emulation&nbsp;of&nbsp;various&nbsp;models&nbsp;of&nbsp;HP&nbsp;calculator&nbsp;for&nbsp;&#088;11&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;Deliberately&nbsp;parses&nbsp;the&nbsp;command&nbsp;line&nbsp;without&nbsp;using&nbsp;&apos;getopt&apos;&nbsp;or&nbsp;&apos;argparse&apos;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;to&nbsp;ma&#120;imise&nbsp;portability&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;This&nbsp;&nbsp;program&nbsp;is&nbsp;free&nbsp;software&#058;&nbsp;you&nbsp;can&nbsp;redistribute&nbsp;it&nbsp;and/or&nbsp;modify&nbsp;it</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;under&nbsp;&nbsp;the&nbsp;terms&nbsp;of&nbsp;the&nbsp;GNU&nbsp;General&nbsp;Public&nbsp;License&nbsp;as&nbsp;published&nbsp;&nbsp;by&nbsp;&nbsp;the</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;Free&nbsp;&nbsp;Software&nbsp;Foundation,&nbsp;either&nbsp;version&nbsp;3&nbsp;of&nbsp;the&nbsp;License,&nbsp;or&nbsp;(at&nbsp;&nbsp;your</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;option)&nbsp;any&nbsp;later&nbsp;version&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;This&nbsp;&nbsp;program&nbsp;&nbsp;is&nbsp;distributed&nbsp;in&nbsp;the&nbsp;hope&nbsp;that&nbsp;it&nbsp;will&nbsp;&nbsp;be&nbsp;&nbsp;useful,&nbsp;&nbsp;but</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;WITHOUT&nbsp;&nbsp;&nbsp;ANY&nbsp;&nbsp;&nbsp;WARRANTY;&nbsp;&nbsp;&nbsp;without&nbsp;even&nbsp;&nbsp;&nbsp;the&nbsp;&nbsp;&nbsp;implied&nbsp;&nbsp;&nbsp;warranty&nbsp;&nbsp;&nbsp;of</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;MERCHANTABILITY&nbsp;or&nbsp;FITNESS&nbsp;FOR&nbsp;A&nbsp;PARTICULAR&nbsp;PURPOSE&#046;&nbsp;See&nbsp;the&nbsp;GNU&nbsp;General</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;Public&nbsp;License&nbsp;for&nbsp;more&nbsp;details&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;You&nbsp;&nbsp;should&nbsp;have&nbsp;received&nbsp;a&nbsp;copy&nbsp;of&nbsp;the&nbsp;GNU&nbsp;General&nbsp;Public&nbsp;License&nbsp;along</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;with&nbsp;this&nbsp;program&#046;&nbsp;&nbsp;If&nbsp;not,&nbsp;see&nbsp;&lt;http&#058;//www&#046;gnu&#046;org/licenses/&gt;&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;13&nbsp;Jun&nbsp;13&nbsp;&nbsp;&nbsp;0&#046;1&nbsp;&nbsp;&nbsp;&#045;&nbsp;Initial&nbsp;version&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;16&nbsp;Jun&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Can&nbsp;use&nbsp;predefined&nbsp;button&nbsp;colours&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;te&#120;t&nbsp;to&nbsp;buttons&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Defined&nbsp;&nbsp;all&nbsp;&nbsp;the&nbsp;font&nbsp;names&nbsp;and&nbsp;colours&nbsp;defined&nbsp;&nbsp;as</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;constants&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;17&nbsp;Jun&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;All&nbsp;fonts&nbsp;now&nbsp;loaded&nbsp;in&nbsp;main&nbsp;routine&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;18&nbsp;Jun&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;font&nbsp;attributes&nbsp;to&nbsp;each&nbsp;button&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;23&nbsp;Jun&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;&nbsp;button_create&nbsp;to&nbsp;create&nbsp;a&nbsp;button&nbsp;and&nbsp;return&nbsp;a</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pointer&nbsp;to&nbsp;the&nbsp;new&nbsp;structure&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Changed&nbsp;button_draw&nbsp;now&nbsp;e&#120;tracts&nbsp;parameters&nbsp;from&nbsp;the</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;button&nbsp;structure&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Modified&nbsp;&nbsp;string&nbsp;&nbsp;constants&nbsp;&nbsp;in&nbsp;&nbsp;key&nbsp;&nbsp;definitions&nbsp;&nbsp;to</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;define&nbsp;any&nbsp;he&#120;&nbsp;character&nbsp;codes&nbsp;properly&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;27&nbsp;Jun&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Any&nbsp;error&nbsp;opening&nbsp;the&nbsp;display&nbsp;are&nbsp;now&nbsp;handled&nbsp;in&nbsp;the</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;same&nbsp;way&nbsp;as&nbsp;other&nbsp;errors&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;30&nbsp;Jun&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Defined&nbsp;te&#120;t&nbsp;colours&nbsp;as&nbsp;constants&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;01&nbsp;Jul&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Buttons&nbsp;now&nbsp;move&nbsp;when&nbsp;pressed&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;02&nbsp;Jul&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Separated&nbsp;&nbsp;code&nbsp;&nbsp;and&nbsp;&nbsp;headers&nbsp;for&nbsp;button&nbsp;&nbsp;and&nbsp;&nbsp;colour</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;manipulation&nbsp;into&nbsp;separate&nbsp;files&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;07&nbsp;Jul&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Made&nbsp;&nbsp;all&nbsp;&nbsp;global&nbsp;variables&nbsp;local&nbsp;&nbsp;variables&nbsp;&nbsp;(e&#120;cept</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;fonts)&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Use&nbsp;window&nbsp;size&nbsp;hints&nbsp;to&nbsp;set&nbsp;window&nbsp;size&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Changed&nbsp;&nbsp;display&nbsp;of&nbsp;inverse&nbsp;trig&nbsp;functions&nbsp;&nbsp;so&nbsp;&nbsp;that</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;minus&nbsp;sign&nbsp;is&nbsp;shown&nbsp;as&nbsp;a&nbsp;super&nbsp;script&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;14&nbsp;Jul&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;display&nbsp;segments&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;15&nbsp;Jul&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Created&nbsp;a&nbsp;display&nbsp;,&nbsp;to&nbsp;allow&nbsp;the&nbsp;7&nbsp;segment&nbsp;LEDs</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;&nbsp;be&nbsp;&nbsp;handled&nbsp;as&nbsp;a&nbsp;single&nbsp;display&nbsp;entity&nbsp;&nbsp;to&nbsp;&nbsp;make</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;updating&nbsp;the&nbsp;display&nbsp;easier&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;14&nbsp;Aug&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Tidied&nbsp;up&nbsp;comments&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;17&nbsp;Aug&nbsp;13&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Window&nbsp;is&nbsp;now&nbsp;redrawn&nbsp;automatically&nbsp;when&nbsp;application</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;loads&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;09&nbsp;Mar&nbsp;14&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Created&nbsp;&nbsp;separate&nbsp;files&nbsp;for&nbsp;code&nbsp;that&nbsp;is&nbsp;dependent&nbsp;on</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;calculator&nbsp;the&nbsp;model&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;10&nbsp;Mar&nbsp;14&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Changed&nbsp;key&nbsp;code&nbsp;inde&#120;es&nbsp;to&nbsp;BCD&nbsp;he&#120;&nbsp;values&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Changed&nbsp;&nbsp;names&nbsp;&nbsp;of&nbsp;display&nbsp;masks&nbsp;to&nbsp;highlight&nbsp;&nbsp;their</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;association&nbsp;with&nbsp;the&nbsp;display&nbsp;module&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;07&nbsp;Dec&nbsp;18&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Finally&nbsp;remembered&nbsp;how&nbsp;to&nbsp;pass&nbsp;WM_DELETE&nbsp;messages&nbsp;to</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;&nbsp;message&nbsp;loop&nbsp;so&nbsp;the&nbsp;application&nbsp;e&#120;its&nbsp;&nbsp;properly</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;when&nbsp;the&nbsp;user&nbsp;closes&nbsp;the&nbsp;application&nbsp;window&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;When&nbsp;a&nbsp;key&nbsp;is&nbsp;&apos;pressed&apos;&nbsp;the&nbsp;display&nbsp;goes&nbsp;blank&nbsp;for&nbsp;a</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;brief&nbsp;interval&nbsp;(just&nbsp;like&nbsp;the&nbsp;real&nbsp;thing)&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;10&nbsp;Dec&nbsp;18&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Alternate&nbsp;&nbsp;function&nbsp;key&nbsp;now&nbsp;LIGHT_BLUE,&nbsp;allowing&nbsp;&nbsp;it</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;be&nbsp;a&nbsp;different&nbsp;colour&nbsp;to&nbsp;the&nbsp;alternate&nbsp;te&#120;t&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;11&nbsp;Dec&nbsp;18&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Tidied&nbsp;up&nbsp;comments&nbsp;again&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;23&nbsp;Aug&nbsp;20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Modified&nbsp;the&nbsp;debug&nbsp;code&nbsp;(again),&nbsp;optional&nbsp;debug&nbsp;code</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e&#120;ecuted&nbsp;using&nbsp;the&nbsp;debug()&nbsp;macro,&nbsp;with&nbsp;print()&nbsp;being</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;used&nbsp;to&nbsp;print&nbsp;diagnostic&nbsp;messages&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;30&nbsp;Aug&nbsp;20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;number&nbsp;formatting&nbsp;routines&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;31&nbsp;Aug&nbsp;20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Made&nbsp;&nbsp;version(),&nbsp;about(),&nbsp;and&nbsp;error()&nbsp;model&nbsp;specific</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;so&nbsp;that&nbsp;the&nbsp;name&nbsp;reflects&nbsp;the&nbsp;model&nbsp;number&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;31&nbsp;Aug&nbsp;20&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Resolved&nbsp;dependencies&nbsp;between&nbsp;header&nbsp;files&nbsp;by&nbsp;moving</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;common&nbsp;function&nbsp;definitions&nbsp;to&nbsp;a&nbsp;separate&nbsp;file&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;08&nbsp;Aug&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Tidied&nbsp;up&nbsp;spelling&nbsp;errors&nbsp;in&nbsp;the&nbsp;comments&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;09&nbsp;Aug&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;The&nbsp;main&nbsp;program&nbsp;loop&nbsp;now&nbsp;checks&nbsp;for&nbsp;pending&nbsp;&nbsp;events</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;before&nbsp;&nbsp;processing&nbsp;&nbsp;any&nbsp;event&nbsp;messages,&nbsp;so&nbsp;Ne&#120;tEvent</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;no&nbsp;longer&nbsp;blocks&nbsp;program&nbsp;e&#120;ecution&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;10&nbsp;Aug&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Moved&nbsp;&nbsp;version(),&nbsp;about(),&nbsp;and&nbsp;error()&nbsp;back&nbsp;to&nbsp;their</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;original&nbsp;position&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;16&nbsp;Aug&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;E&#120;ecutes&nbsp;&nbsp;a&nbsp;single&nbsp;instruction&nbsp;in&nbsp;every&nbsp;iteration&nbsp;of</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;main&nbsp;event&nbsp;loop&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;19&nbsp;Aug&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Modified&nbsp;processor&nbsp;simulation&nbsp;to&nbsp;make&nbsp;it&nbsp;more&nbsp;,</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;orientated&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;21&nbsp;Aug&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Removed&nbsp;short&nbsp;form&nbsp;of&nbsp;the&nbsp;help&nbsp;option&nbsp;and&nbsp;fi&#120;ed&nbsp;help</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;te&#120;t&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;a&nbsp;flags&nbsp;for&nbsp;the&nbsp;Shift,&nbsp;Ctrl&nbsp;and&nbsp;Alt&nbsp;keys&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;single&nbsp;step&nbsp;and&nbsp;trace&nbsp;command&nbsp;line&nbsp;options&nbsp;and</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;&nbsp;ability&nbsp;&nbsp;to&nbsp;control&nbsp;the&nbsp;processor&nbsp;using&nbsp;&nbsp;ctrl&#045;s</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and&nbsp;ctrl&#045;q&nbsp;for&nbsp;single&nbsp;stepping,&nbsp;and&nbsp;ctrl&#045;t&nbsp;to&nbsp;enable</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;or&nbsp;disable&nbsp;tracing&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;definition&nbsp;for&nbsp;commit&nbsp;id&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;30&nbsp;Aug&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Separated&nbsp;version&nbsp;and&nbsp;licence&nbsp;notices&nbsp;into&nbsp;their&nbsp;own</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;routines&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Abort&nbsp;if&nbsp;an&nbsp;error&nbsp;occurs&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;2&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Can&nbsp;&nbsp;now&nbsp;enable&nbsp;single&nbsp;stepping&nbsp;and&nbsp;tracing&nbsp;using&nbsp;&nbsp;a</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;hard&#045;coded&nbsp;break&#045;point&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;5&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;The&nbsp;display&nbsp;is&nbsp;no&nbsp;longer&nbsp;blanked&nbsp;automatically&nbsp;&nbsp;when</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;key&nbsp;is&nbsp;pressed&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Key&nbsp;press&nbsp;events&nbsp;now&nbsp;handled&nbsp;properly&nbsp;using&nbsp;keypress</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and&nbsp;keystate&nbsp;properties&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Tidied&nbsp;up&nbsp;comments&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;9&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Don&apos;t&nbsp;trace&nbsp;busy&nbsp;loops&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;12&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Fi&#120;ed&nbsp;bug&nbsp;with&nbsp;single&nbsp;step&nbsp;and&nbsp;trace&nbsp;&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;option&nbsp;to&nbsp;allow&nbsp;break&#045;point&nbsp;to&nbsp;be&nbsp;set&nbsp;from&nbsp;the</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;command&nbsp;line&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;14&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Eliminated&nbsp;&nbsp;the&nbsp;delay&nbsp;between&nbsp;ticks&nbsp;when&nbsp;the&nbsp;display</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;is&nbsp;blank&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&#046;2&nbsp;&nbsp;&nbsp;&#045;&nbsp;HP21&nbsp;simulator&nbsp;works&nbsp;!!</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;15&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;The&nbsp;&nbsp;escape&nbsp;key&nbsp;now&nbsp;resets&nbsp;the&nbsp;simulator&nbsp;instead&nbsp;&nbsp;of</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;e&#120;iting&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;16&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Improved&nbsp;the&nbsp;display&nbsp;flicker&nbsp;problem&nbsp;by&nbsp;updating&nbsp;the</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;display&nbsp;&nbsp;only&nbsp;once&nbsp;every&nbsp;100&nbsp;ticks&nbsp;instead&nbsp;of&nbsp;&nbsp;every</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;tick&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;18&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;keycode&nbsp;to&nbsp;the&nbsp;button&nbsp;properties&nbsp;and&nbsp;a&nbsp;&nbsp;method</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;&nbsp;determine&nbsp;if&nbsp;this&nbsp;corresponds&nbsp;to&nbsp;a&nbsp;button&nbsp;&nbsp;which</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;allows&nbsp;a&nbsp;button&nbsp;to&nbsp;be&nbsp;operated&nbsp;by&nbsp;a&nbsp;key&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;19&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Created&nbsp;a&nbsp;keyboard&nbsp;class&nbsp;to&nbsp;keep&nbsp;track&nbsp;of&nbsp;the&nbsp;&nbsp;input</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;state&nbsp;and&nbsp;translate&nbsp;keystrokes&nbsp;into&nbsp;characters&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;21&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Set&nbsp;the&nbsp;default&nbsp;active&nbsp;button&nbsp;to&nbsp;NULL&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;28&nbsp;Sep&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;The&nbsp;&nbsp;escape&nbsp;key&nbsp;now&nbsp;mapped&nbsp;to&nbsp;&apos;Cl&#120;&apos;&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;1&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Converted&nbsp;flags&nbsp;to&nbsp;Boolean&nbsp;variables&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;2&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Changed&nbsp;property&nbsp;names&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;4&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;the&nbsp;ability&nbsp;to&nbsp;display&nbsp;the&nbsp;CPU&nbsp;registers&nbsp;using</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Ctrl&#045;R&nbsp;when&nbsp;in&nbsp;trace&nbsp;mode&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;7&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;0&#046;3&nbsp;&nbsp;&nbsp;&#045;&nbsp;HP25&nbsp;simulator&nbsp;now&nbsp;working&#046;&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;10&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Allows&nbsp;&nbsp;switches&nbsp;and&nbsp;buttons&nbsp;to&nbsp;be&nbsp;undefined&nbsp;if&nbsp;&nbsp;not</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;used&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;11&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Most&nbsp;&nbsp;te&#120;t&nbsp;&nbsp;messages&nbsp;are&nbsp;now&nbsp;defined&nbsp;in&nbsp;the&nbsp;&nbsp;header,</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this&nbsp;allows&nbsp;the&nbsp;content&nbsp;to&nbsp;be&nbsp;defined&nbsp;separately&nbsp;for</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;each&nbsp;platform&nbsp;which&nbsp;means&nbsp;that&nbsp;about()&nbsp;and&nbsp;licence()</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;can&nbsp;&nbsp;be&nbsp;replaced&nbsp;by&nbsp;simple&nbsp;calls&nbsp;to&nbsp;fprintf()&#046;&nbsp;&nbsp;This</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;also&nbsp;&nbsp;makes&nbsp;it&nbsp;easier&nbsp;to&nbsp;support&nbsp;multiple&nbsp;&nbsp;languages</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;necessary&nbsp;in&nbsp;the&nbsp;future&nbsp;&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Required&nbsp;&nbsp;colour&nbsp;depth&nbsp;now&nbsp;defined&nbsp;in&nbsp;header&nbsp;(allows</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;code&nbsp;to&nbsp;work&nbsp;on&nbsp;VMS&nbsp;using&nbsp;a&nbsp;black&nbsp;and&nbsp;white&nbsp;&nbsp;display</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;without&nbsp;being&nbsp;modified)&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;12&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;routine&nbsp;to&nbsp;display&nbsp;warnings&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;14&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;support&nbsp;for&nbsp;continuous&nbsp;memory&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;16&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;0&#046;4&nbsp;&nbsp;&nbsp;&#045;&nbsp;HP29&nbsp;simulator&nbsp;works&#046;&#046;!</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Undefined&nbsp;&nbsp;switches&nbsp;should&nbsp;be&nbsp;off&#046;&nbsp;&nbsp;Rather&nbsp;strangely</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;HP27&nbsp;tests&nbsp;S3&nbsp;even&nbsp;though&nbsp;it&nbsp;doesn&apos;t&nbsp;have&nbsp;a&nbsp;mode</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;select&nbsp;switch&nbsp;&#045;&nbsp;go&nbsp;figure&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&#046;5&nbsp;&nbsp;&nbsp;&#045;&nbsp;HP27&nbsp;simulator&nbsp;works&nbsp;(requires&nbsp;testing)&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&#046;6&nbsp;&nbsp;&nbsp;&#045;&nbsp;HP31&nbsp;and&nbsp;HP32&nbsp;simulators&nbsp;work&nbsp;(require&nbsp;testing)&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;26&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;0&#046;7&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;the&nbsp;ability&nbsp;to&nbsp;allow&nbsp;the&nbsp;user&nbsp;to&nbsp;specify&nbsp;which</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;file&nbsp;should&nbsp;be&nbsp;used&nbsp;when&nbsp;restoring&nbsp;the&nbsp;initial&nbsp;state</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;of&nbsp;&nbsp;the&nbsp;registers&nbsp;on&nbsp;the&nbsp;command&nbsp;line&nbsp;(only&nbsp;&nbsp;applies</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;models&nbsp;with&nbsp;continuous&nbsp;memory)&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;HP&nbsp;33C&nbsp;simulator&nbsp;works&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;29&nbsp;Oct&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Draw&nbsp;display&nbsp;when&nbsp;window&nbsp;is&nbsp;e&#120;posed&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;01&nbsp;Nov&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;E&#120;plicitly&nbsp;define&nbsp;the&nbsp;cursor&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Attempts&nbsp;&nbsp;to&nbsp;center&nbsp;the&nbsp;window&nbsp;on&nbsp;the&nbsp;display&#046;&nbsp;&nbsp;Most</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;window&nbsp;managers&nbsp;ignore&nbsp;this,&nbsp;but&nbsp;it&nbsp;does&nbsp;work&nbsp;if&nbsp;the</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;application&nbsp;is&nbsp;invoked&nbsp;directly&nbsp;by&nbsp;start&#120;&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;02&nbsp;Nov&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Allows&nbsp;size&nbsp;of&nbsp;the&nbsp;window&nbsp;to&nbsp;be&nbsp;changed&nbsp;by&nbsp;modifying</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;value&nbsp;of&nbsp;SCALE&nbsp;at&nbsp;compile&nbsp;time&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;15&nbsp;Nov&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Holding&nbsp;down&nbsp;the&nbsp;off&nbsp;switch&nbsp;for&nbsp;two&nbsp;seconds&nbsp;will&nbsp;end</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;simulation&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;17&nbsp;Nov&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Defined&nbsp;te&#120;t&nbsp;messages&nbsp;as&nbsp;string&nbsp;constants&nbsp;instead&nbsp;of</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;macros&nbsp;and&nbsp;moved&nbsp;them&nbsp;into&nbsp;this&nbsp;file&nbsp;to&nbsp;get&nbsp;the&nbsp;code</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;to&nbsp;compile&nbsp;using&nbsp;VA&#088;C&#046;&nbsp;&nbsp;I&nbsp;would&nbsp;have&nbsp;preferred&nbsp;to&nbsp;be</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;able&nbsp;to&nbsp;define&nbsp;them&nbsp;in&nbsp;a&nbsp;separate&nbsp;language&nbsp;&nbsp;specific</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;module&nbsp;but&nbsp;I&nbsp;can&apos;t&nbsp;figure&nbsp;out&nbsp;how&nbsp;to&nbsp;make&nbsp;it&nbsp;work&nbsp;on</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;older&nbsp;C&nbsp;compilers&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;21&nbsp;Nov&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Mapped&nbsp;backspace&nbsp;key&nbsp;to&nbsp;escape&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;28&nbsp;Nov&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Made&nbsp;the&nbsp;trace&nbsp;flag&nbsp;a&nbsp;processor&nbsp;property&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0&#046;8&nbsp;&nbsp;&nbsp;&#045;&nbsp;HP34&nbsp;simulator&nbsp;works&nbsp;(require&nbsp;testing)&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;02&nbsp;Dec&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Removed&nbsp;any&nbsp;references&nbsp;to&nbsp;TRACE&nbsp;and&nbsp;fi&#120;ed&nbsp;the&nbsp;bug&nbsp;in</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;CPU&nbsp;status&nbsp;that&nbsp;broke&nbsp;radians&nbsp;on&nbsp;the&nbsp;HP29&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;07&nbsp;Dec&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Fi&#120;ed&nbsp;bug&nbsp;in&nbsp;trace&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;16&nbsp;Dec&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Since&nbsp;later&nbsp;models&nbsp;use&nbsp;more&nbsp;comple&#120;&nbsp;tests&nbsp;to&nbsp;monitor</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;user&nbsp;input&nbsp;detecting&nbsp;and&nbsp;suppressing&nbsp;the&nbsp;output&nbsp;from</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;&apos;busy&nbsp;wait&apos;&nbsp;loop&nbsp;isn&apos;t&nbsp;useful&nbsp;so&nbsp;I&nbsp;removed&nbsp;it&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;17&nbsp;Dec&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Counts&nbsp;number&nbsp;of&nbsp;ticks&nbsp;elapsed&nbsp;when&nbsp;holding&nbsp;down&nbsp;the</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;off&nbsp;switch&nbsp;instead&nbsp;of&nbsp;counting&nbsp;the&nbsp;number&nbsp;of&nbsp;seconds</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;which&nbsp;is&nbsp;more&nbsp;accurate&nbsp;and&nbsp;removes&nbsp;the&nbsp;dependency&nbsp;on</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time&#046;h&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;20&nbsp;Dec&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Changed&nbsp;all&nbsp;&#035;ifdef&nbsp;to&nbsp;&#035;if&nbsp;defined()&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;22&nbsp;Dec&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Uses&nbsp;model&nbsp;numbers&nbsp;for&nbsp;conditional&nbsp;compilation&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;26&nbsp;Dec&nbsp;21&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Checks&nbsp;the&nbsp;on/off&nbsp;switch&nbsp;state&nbsp;at&nbsp;startup&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;03&nbsp;jan&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;ability&nbsp;to&nbsp;trap&nbsp;e&#120;ecution&nbsp;of&nbsp;an&nbsp;opcode&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;03&nbsp;Jan&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Changed&nbsp;debug()&nbsp;macro&nbsp;so&nbsp;that&nbsp;debug&nbsp;code&nbsp;is&nbsp;e&#120;ecuted</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;when&nbsp;DEBUG&nbsp;is&nbsp;defined&nbsp;(doesn&apos;t&nbsp;need&nbsp;to&nbsp;be&nbsp;true)&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;04&nbsp;Jan&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Updated&nbsp;help&nbsp;te&#120;t&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;12&nbsp;Jan&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Only&nbsp;sets&nbsp;mode&nbsp;switch&nbsp;state&nbsp;at&nbsp;start&nbsp;up&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Checks&nbsp;&nbsp;for&nbsp;breakpoints&nbsp;and&nbsp;instruction&nbsp;traps&nbsp;at&nbsp;the</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;same&nbsp;time&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;21&nbsp;Jan&nbsp;22&nbsp;&nbsp;&nbsp;0&#046;1&nbsp;&nbsp;&nbsp;&#045;&nbsp;Moved&nbsp;te&#120;t&nbsp;messages&nbsp;to&nbsp;a&nbsp;separate&nbsp;file&nbsp;&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;23&nbsp;Jan&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Removed&nbsp;unwanted&nbsp;debug&nbsp;code&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;29&nbsp;Jan&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;an&nbsp;optional&nbsp;bezel&nbsp;to&nbsp;the&nbsp;display,&nbsp;not&nbsp;that&nbsp;you</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;will&nbsp;see&nbsp;it&nbsp;yet&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;31&nbsp;Jan&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Added&nbsp;support&nbsp;for&nbsp;the&nbsp;HP10C,&nbsp;HP11C,&nbsp;HP12C,&nbsp;HP15C&nbsp;and</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HP16C&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;28&nbsp;Feb&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Read&nbsp;&nbsp;option&nbsp;implemented&nbsp;to&nbsp;allow&nbsp;ROM&nbsp;contents&nbsp;to&nbsp;be</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;loaded&nbsp;from&nbsp;a&nbsp;file&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;04&nbsp;Mar&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Modified&nbsp;&nbsp;the&nbsp;delay&nbsp;between&nbsp;each&nbsp;tick&nbsp;for&nbsp;the&nbsp;HP10C,</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HP11C,&nbsp;HP12C,&nbsp;HP15C&nbsp;and&nbsp;HP16C&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;14&nbsp;Mar&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Modified&nbsp;delay&nbsp;timings&nbsp;to&nbsp;speed&nbsp;up&nbsp;the&nbsp;HP10C,&nbsp;HP11C,</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;HP12C,&nbsp;HP15C&nbsp;and&nbsp;HP16C&nbsp;slightly&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;31&nbsp;Mar&nbsp;22&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Modified&nbsp;way&nbsp;the&nbsp;delay&nbsp;values&nbsp;are&nbsp;calculated&nbsp;to&nbsp;make</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;time&nbsp;needed&nbsp;to&nbsp;hold&nbsp;down&nbsp;the&nbsp;off&nbsp;button&nbsp;the&nbsp;same</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;all&nbsp;simulators&nbsp;&#045;&nbsp;MT</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;To&nbsp;Do&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Parse&nbsp;command&nbsp;line&nbsp;in&nbsp;a&nbsp;separate&nbsp;routine&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Add&nbsp;verbose&nbsp;option&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Allow&nbsp;VMS&nbsp;users&nbsp;to&nbsp;set&nbsp;breakpoints?</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Load&nbsp;ROMs&nbsp;from&nbsp;a&nbsp;separate&nbsp;file?</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Free&nbsp;up&nbsp;allocated&nbsp;memory&nbsp;on&nbsp;e&#120;it&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#045;&nbsp;Sort&nbsp;out&nbsp;colour&nbsp;mapping&#046;</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*</span>&nbsp;<br>
+<span style="color:slategray;">&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;define</span>&nbsp;NAME&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;define</span>&nbsp;VERSION&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:darkgreen;">&quot;0&#046;8&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;define</span>&nbsp;BUILD&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:darkgreen;">&quot;0092&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;define</span>&nbsp;DATE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:darkgreen;">&quot;29&nbsp;Jan&nbsp;22&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;define</span>&nbsp;AUTHOR&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:darkgreen;">&quot;MT&quot;</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;define</span>&nbsp;INTERVAL&nbsp;<span style="color:darkturquoise;">25</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;Number&nbsp;of&nbsp;ticks&nbsp;to&nbsp;e&#120;ecute&nbsp;before&nbsp;updating&nbsp;the&nbsp;display&nbsp;*/</span>&nbsp;<br>
+<span style="color:green;">&#035;define</span>&nbsp;DELAY&nbsp;<span style="color:darkturquoise;">50</span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;Number&nbsp;of&nbsp;intervals&nbsp;to&nbsp;wait&nbsp;before&nbsp;e&#120;iting&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;&lt;stdarg&#046;h&gt;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;strlen(),&nbsp;etc&nbsp;*/</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;&lt;string&#046;h&gt;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;strlen(),&nbsp;etc&nbsp;*/</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;&lt;stdio&#046;h&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;fprintf(),&nbsp;etc&nbsp;*/</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;&lt;stdlib&#046;h&gt;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;getenv(),&nbsp;etc&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;&lt;ctype&#046;h&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;isprint(),&nbsp;etc&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;&lt;&#088;11/&#088;lib&#046;h&gt;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;&#088;OpenDisplay(),&nbsp;etc&nbsp;*/</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;&lt;&#088;11/&#088;util&#046;h&gt;&nbsp;<span style="color:slategray;">/*&nbsp;&#088;SizeHints&nbsp;etc&nbsp;*/</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;&lt;&#088;11/cursorfont&#046;h&gt;&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#045;font&#046;h&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#045;button&#046;h&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#045;switch&#046;h&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#045;label&#046;h&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#045;colour&#046;h&quot;</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#046;h&quot;</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#045;segment&#046;h&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#045;display&#046;h&quot;</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#045;cpu&#046;h&quot;</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;keyboard&#046;h&quot;</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;&#120;11&#045;calc&#045;messages&#046;h&quot;</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;gcc&#045;debug&#046;h&quot;</span>&nbsp;<span style="color:slategray;">/*&nbsp;print()&nbsp;*/</span>&nbsp;<br>
+<span style="color:green;">&#035;include</span>&nbsp;<span style="color:darkgreen;">&quot;gcc&#045;wait&#046;h&quot;</span>&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;i_wait()&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+<span style="color:dodgerblue;">void</span>&nbsp;v_version()&nbsp;<span style="color:slategray;">/*&nbsp;Display&nbsp;version&nbsp;information&nbsp;*/</span>&nbsp;<br>
+{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;<span style="color:darkgreen;">&quot;%s&#058;&nbsp;Version&nbsp;%s&nbsp;%s&quot;</span>,&nbsp;FILENAME,&nbsp;VERSION,&nbsp;COMMIT_ID);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(__DATE__[<span style="color:darkturquoise;">4</span>]&nbsp;==&nbsp;<span style="color:darkgreen;">&apos;&nbsp;&apos;</span>)&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;<span style="color:darkgreen;">&quot;&nbsp;0&quot;</span>);&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;<span style="color:darkgreen;">&quot;&nbsp;%c&quot;</span>,&nbsp;__DATE__[<span style="color:darkturquoise;">4</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;<span style="color:darkgreen;">&quot;%c&nbsp;%c%c%c&nbsp;%s&nbsp;%s&quot;</span>,&nbsp;__DATE__[<span style="color:darkturquoise;">5</span>],&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;__DATE__[<span style="color:darkturquoise;">0</span>],&nbsp;__DATE__[<span style="color:darkturquoise;">1</span>],&nbsp;__DATE__[<span style="color:darkturquoise;">2</span>],&nbsp;__DATE__&nbsp;<span style="color:darkturquoise;">+9</span>,&nbsp;__TIME__&nbsp;);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;<span style="color:darkgreen;">&quot;&nbsp;(Build&#058;&nbsp;%s)</span><span style="color:brown;">\n</span><span style="color:forestgreen;">&quot;</span>,&nbsp;BUILD&nbsp;);&nbsp;<br>
+}&nbsp;<br>
+&nbsp;<br>
+<span style="color:dodgerblue;">void</span>&nbsp;v_warning(<span style="color:dodgerblue;">const</span>&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;*s_format,&nbsp;&#046;&#046;&#046;)&nbsp;<span style="color:slategray;">/*&nbsp;Print&nbsp;formatted&nbsp;warning&nbsp;message&nbsp;and&nbsp;e&#120;it&nbsp;*/</span>&nbsp;<br>
+{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;va_list&nbsp;t_args;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;va_start(t_args,&nbsp;s_format);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stderr,&nbsp;<span style="color:darkgreen;">&quot;%s&nbsp;&#058;&nbsp;&quot;</span>,&nbsp;FILENAME);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;vfprintf(stderr,&nbsp;s_format,&nbsp;t_args);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;va_end(t_args);&nbsp;<br>
+}&nbsp;<br>
+&nbsp;<br>
+<span style="color:dodgerblue;">void</span>&nbsp;v_error(<span style="color:dodgerblue;">const</span>&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;*s_format,&nbsp;&#046;&#046;&#046;)&nbsp;<span style="color:slategray;">/*&nbsp;Print&nbsp;formatted&nbsp;error&nbsp;message&nbsp;and&nbsp;e&#120;it&nbsp;*/</span>&nbsp;<br>
+{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;va_list&nbsp;t_args;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;va_start(t_args,&nbsp;s_format);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stderr,&nbsp;<span style="color:darkgreen;">&quot;%s&nbsp;&#058;&nbsp;&quot;</span>,&nbsp;FILENAME);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;vfprintf(stderr,&nbsp;s_format,&nbsp;t_args);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;va_end(t_args);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stdout,<span style="color:darkgreen;">&quot;</span><span style="color:brown;">\n</span><span style="color:forestgreen;">&quot;</span>);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:purple;">e&#120;it</span>(<span style="color:darkturquoise;">&#045;1</span>);&nbsp;<br>
+}&nbsp;<br>
+&nbsp;<br>
+<span style="color:dodgerblue;">void</span>&nbsp;v_set_blank_cursor(Display&nbsp;*&#120;_display,&nbsp;Window&nbsp;&#120;_application_window,&nbsp;Cursor&nbsp;*&#120;_cursor)&nbsp;<br>
+{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;Pi&#120;map&nbsp;&#120;_blank;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;Color&nbsp;&#120;_Color;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;c_pi&#120;map_data[<span style="color:darkturquoise;">1</span>]&nbsp;<span style="color:darkcyan;">=</span>&nbsp;{<span style="color:darkturquoise;">0</span>};&nbsp;<span style="color:slategray;">/*&nbsp;An&nbsp;empty&nbsp;pi&#120;map&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#120;_blank&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;CreateBitmapFromData&nbsp;(&#120;_display,&nbsp;&#120;_application_window,&nbsp;c_pi&#120;map_data,&nbsp;<span style="color:darkturquoise;">1</span>,&nbsp;<span style="color:darkturquoise;">1</span>);&nbsp;<span style="color:slategray;">/*&nbsp;Create&nbsp;an&nbsp;empty&nbsp;bitmap&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;(*&#120;_cursor)&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;CreatePi&#120;mapCursor(&#120;_display,&nbsp;&#120;_blank,&nbsp;&#120;_blank,&nbsp;&amp;&#120;_Color,&nbsp;&amp;&#120;_Color,&nbsp;<span style="color:darkturquoise;">0</span>,&nbsp;<span style="color:darkturquoise;">0</span>);&nbsp;<span style="color:slategray;">/*&nbsp;Use&nbsp;the&nbsp;empty&nbsp;pi&#120;map&nbsp;to&nbsp;create&nbsp;a&nbsp;blank&nbsp;cursor&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;FreePi&#120;map&nbsp;(&#120;_display,&nbsp;&#120;_blank);&nbsp;<span style="color:slategray;">/*&nbsp;Free&nbsp;up&nbsp;pi&#120;map&nbsp;*/</span>&nbsp;<br>
+}&nbsp;<br>
+&nbsp;<br>
+<span style="color:dodgerblue;">int</span>&nbsp;main(<span style="color:dodgerblue;">int</span>&nbsp;argc,&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;*argv[])&nbsp;<br>
+{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;Display&nbsp;*&#120;_display;&nbsp;<span style="color:slategray;">/*&nbsp;Pointer&nbsp;to&nbsp;&#088;&nbsp;display&nbsp;structure&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;Window&nbsp;&#120;_application_window;&nbsp;<span style="color:slategray;">/*&nbsp;Application&nbsp;window&nbsp;structure&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;Cursor&nbsp;&#120;_cursor;&nbsp;<span style="color:slategray;">/*&nbsp;Application&nbsp;cursor&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;Event&nbsp;&#120;_event;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;SizeHints&nbsp;*h_size_hint;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;Atom&nbsp;wm_delete;&nbsp;<br>
+&nbsp;<br>
+&#035;if&nbsp;defined(SWITCHES)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;oswitch&nbsp;*h_switch[SWITCHES];&nbsp;<br>
+&#035;endif&nbsp;<br>
+&#035;if&nbsp;defined(LABELS)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;olabel&nbsp;*h_label[LABELS];&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;obutton&nbsp;*h_button[BUTTONS];&nbsp;<span style="color:slategray;">/*&nbsp;Array&nbsp;to&nbsp;hold&nbsp;pointers&nbsp;to&nbsp;buttons&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;obutton&nbsp;*h_pressed&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:dodgerblue;">NULL</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;odisplay&nbsp;*h_display;&nbsp;<span style="color:slategray;">/*&nbsp;Pointer&nbsp;to&nbsp;display&nbsp;structure&nbsp;*/</span>&nbsp;<br>
+&#035;if&nbsp;defined(linu&#120;)&nbsp;||&nbsp;defined(__NetBSD__)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;okeyboard&nbsp;*h_keyboard;&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;oprocessor&nbsp;*h_processor;&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;*s_display_name&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkgreen;">&quot;&quot;</span>;&nbsp;<span style="color:slategray;">/*&nbsp;Just&nbsp;use&nbsp;the&nbsp;default&nbsp;display&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;*s_font;&nbsp;<span style="color:slategray;">/*&nbsp;Font&nbsp;description&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;*s_title&nbsp;<span style="color:darkcyan;">=</span>&nbsp;TITLE;&nbsp;<span style="color:slategray;">/*&nbsp;Windows&nbsp;title&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;*s_pathname&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:dodgerblue;">NULL</span>;&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">unsigned</span>&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_screen_width;&nbsp;<span style="color:slategray;">/*&nbsp;Screen&nbsp;width&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">unsigned</span>&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_screen_height;&nbsp;<span style="color:slategray;">/*&nbsp;Screen&nbsp;height&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">unsigned</span>&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_window_width&nbsp;<span style="color:darkcyan;">=</span>&nbsp;WIDTH;&nbsp;<span style="color:slategray;">/*&nbsp;Window&nbsp;width&nbsp;in&nbsp;pi&#120;els&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">unsigned</span>&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_window_height&nbsp;<span style="color:darkcyan;">=</span>&nbsp;HEIGHT;&nbsp;<span style="color:slategray;">/*&nbsp;Window&nbsp;height&nbsp;in&nbsp;pi&#120;els&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">unsigned</span>&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_window_border&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">4</span>;&nbsp;<span style="color:slategray;">/*&nbsp;Window&apos;s&nbsp;border&nbsp;width&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">unsigned</span>&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_colour_depth;&nbsp;<span style="color:slategray;">/*&nbsp;Window&apos;s&nbsp;colour&nbsp;depth&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">unsigned</span>&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_background_colour;&nbsp;<span style="color:slategray;">/*&nbsp;Window&apos;s&nbsp;background&nbsp;colour&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_window_left,&nbsp;i_window_top;&nbsp;<span style="color:slategray;">/*&nbsp;Window&apos;s&nbsp;top&#045;left&nbsp;corner&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_screen;&nbsp;<span style="color:slategray;">/*&nbsp;Default&nbsp;screen&nbsp;number&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;b_trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<span style="color:slategray;">/*&nbsp;Trace&nbsp;flag&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;b_step&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<span style="color:slategray;">/*&nbsp;Single&nbsp;step&nbsp;flag&nbsp;flag&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;b_cursor&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<span style="color:slategray;">/*&nbsp;Draw&nbsp;a&nbsp;cursor&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;b_run&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<span style="color:slategray;">/*&nbsp;Run&nbsp;flag&nbsp;controls&nbsp;CPU&nbsp;instruction&nbsp;e&#120;ecution&nbsp;in&nbsp;main&nbsp;loop&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">char</span>&nbsp;b_abort&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;/*Abort&nbsp;flag&nbsp;controls&nbsp;e&#120;ecution&nbsp;of&nbsp;main&nbsp;loop&nbsp;*/&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_offset,&nbsp;i_count,&nbsp;i_inde&#120;;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_breakpoint&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">&#045;1</span>;&nbsp;<span style="color:slategray;">/*&nbsp;Break&#045;point&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_trap&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">&#045;1</span>;&nbsp;<span style="color:slategray;">/*&nbsp;Trap&nbsp;instruction&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_ticks&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">&#045;1</span>;&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_processor&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_processor_create(i_rom);&nbsp;<br>
+&#035;if&nbsp;defined(vms)&nbsp;<span style="color:slategray;">/*&nbsp;Parse&nbsp;DEC&nbsp;style&nbsp;command&nbsp;line&nbsp;options&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_count&nbsp;&lt;&nbsp;argc;&nbsp;i_count++)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argv[i_count][<span style="color:darkturquoise;">0</span>]&nbsp;==&nbsp;<span style="color:darkgreen;">&apos;/&apos;</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_inde&#120;&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;argv[i_count][i_inde&#120;];&nbsp;i_inde&#120;++)&nbsp;<span style="color:slategray;">/*&nbsp;Convert&nbsp;option&nbsp;to&nbsp;uppercase&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argv[i_count][i_inde&#120;]&nbsp;&gt;=&nbsp;<span style="color:darkgreen;">&apos;a&apos;</span>&nbsp;&amp;&amp;&nbsp;argv[i_count][i_inde&#120;]&nbsp;&lt;=&nbsp;<span style="color:darkgreen;">&apos;z&apos;</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argv[i_count][i_inde&#120;]&nbsp;<span style="color:darkcyan;">=</span>&nbsp;argv[i_count][i_inde&#120;]&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkturquoise;">32</span>;&nbsp;<span style="color:slategray;">/*&nbsp;TO&nbsp;DO&nbsp;&#045;&nbsp;Assumes&nbsp;8&#045;bit&nbsp;ASCII&nbsp;encoding&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;/STEP&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<span style="color:slategray;">/*&nbsp;Start&nbsp;in&nbsp;single&nbsp;step&nbsp;mode&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;/CURSOR&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_cursor&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<span style="color:slategray;">/*&nbsp;Enable&nbsp;tracing&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;/NOCURSOR&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<span style="color:slategray;">/*&nbsp;Enable&nbsp;tracing&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;/TRACE&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<span style="color:slategray;">/*&nbsp;Enable&nbsp;tracing&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;/VERSION&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_version;&nbsp;<span style="color:slategray;">/*&nbsp;Display&nbsp;version&nbsp;information&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;h_msg_licence,&nbsp;__DATE__&nbsp;<span style="color:darkturquoise;">+7</span>,&nbsp;AUTHOR);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:purple;">e&#120;it</span>(<span style="color:darkturquoise;">0</span>);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;((!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;/HELP&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<span style="color:darkcyan;">|</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;/?&quot;</span>,&nbsp;i_inde&#120;)))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;c_msg_usage,&nbsp;FILENAME);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:purple;">e&#120;it</span>(<span style="color:darkturquoise;">0</span>);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:slategray;">/*&nbsp;If&nbsp;we&nbsp;get&nbsp;here&nbsp;then&nbsp;the&nbsp;we&nbsp;have&nbsp;an&nbsp;invalid&nbsp;option&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_invalid_option,&nbsp;argv[i_count]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argv[i_count][<span style="color:darkturquoise;">1</span>]&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_inde&#120;&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_count;&nbsp;i_inde&#120;&nbsp;&lt;&nbsp;argc&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_inde&#120;++)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argv[i_inde&#120;]&nbsp;<span style="color:darkcyan;">=</span>&nbsp;argv[i_inde&#120;&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>];&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argc&#045;&#045;;&nbsp;i_count&#045;&#045;;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&#035;else&nbsp;<span style="color:slategray;">/*&nbsp;Parse&nbsp;UNI&#088;&nbsp;style&nbsp;command&nbsp;line&nbsp;options&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;b_abort&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<span style="color:slategray;">/*&nbsp;Stop&nbsp;processing&nbsp;command&nbsp;line&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_count&nbsp;&lt;&nbsp;argc&nbsp;&amp;&amp;&nbsp;(b_abort&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;True);&nbsp;i_count++)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argv[i_count][<span style="color:darkturquoise;">0</span>]&nbsp;==&nbsp;<span style="color:darkgreen;">&apos;&#045;&apos;</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_inde&#120;&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">while</span>&nbsp;(argv[i_count][i_inde&#120;]&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">switch</span>&nbsp;(argv[i_count][i_inde&#120;])&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;<span style="color:darkgreen;">&apos;b&apos;</span>&#058;&nbsp;<span style="color:slategray;">/*&nbsp;Breakpoint&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argv[i_count][i_inde&#120;&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_invalid_argument,&nbsp;argv[i_count][i_inde&#120;&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>&nbsp;&lt;&nbsp;argc)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_breakpoint&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_offset&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;i_offset&nbsp;&lt;&nbsp;strlen(argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;i_offset++)&nbsp;<span style="color:slategray;">/*&nbsp;Parse&nbsp;octal&nbsp;number&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;((argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>][i_offset]&nbsp;&lt;&nbsp;<span style="color:darkgreen;">&apos;0&apos;</span>)&nbsp;||&nbsp;(argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>][i_offset]&nbsp;&gt;&nbsp;<span style="color:darkgreen;">&apos;7&apos;</span>))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_invalid_number,&nbsp;argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_breakpoint&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_breakpoint&nbsp;<span style="color:darkcyan;">*</span>&nbsp;<span style="color:darkturquoise;">8</span>&nbsp;<span style="color:darkcyan;">+</span>&nbsp;argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>][i_offset]&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkgreen;">&apos;0&apos;</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;((i_breakpoint&nbsp;&lt;&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;&nbsp;||&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(i_breakpoint&nbsp;&gt;&nbsp;(<span style="color:dodgerblue;">unsigned</span>)(<span style="color:dodgerblue;">sizeof</span>(i_rom)&nbsp;<span style="color:darkcyan;">/</span>&nbsp;<span style="color:dodgerblue;">sizeof</span>&nbsp;i_rom[<span style="color:darkturquoise;">0</span>]))&nbsp;||&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(i_breakpoint&nbsp;&gt;&nbsp;<span style="color:darkturquoise;">07777</span>))&nbsp;<span style="color:slategray;">/*&nbsp;Check&nbsp;address&nbsp;range&nbsp;&#045;&nbsp;must&nbsp;be&nbsp;in&nbsp;bank&nbsp;0*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_address_range,&nbsp;argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">2</span>&nbsp;&lt;&nbsp;argc)&nbsp;<span style="color:slategray;">/*&nbsp;Remove&nbsp;the&nbsp;parameter&nbsp;from&nbsp;the&nbsp;arguments&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_offset&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_offset&nbsp;&lt;&nbsp;argc&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_offset++)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argv[i_offset]&nbsp;<span style="color:darkcyan;">=</span>&nbsp;argv[i_offset&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>];&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argc&#045;&#045;;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_missing_argument,&nbsp;argv[i_count]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_inde&#120;&nbsp;<span style="color:darkcyan;">=</span>&nbsp;strlen(argv[i_count])&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;<span style="color:darkgreen;">&apos;i&apos;</span>&#058;&nbsp;<span style="color:slategray;">/*&nbsp;Trap&nbsp;Instruction&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argv[i_count][i_inde&#120;&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_invalid_argument,&nbsp;argv[i_count][i_inde&#120;&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>&nbsp;&lt;&nbsp;argc)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_trap&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_offset&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;i_offset&nbsp;&lt;&nbsp;strlen(argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;i_offset++)&nbsp;<span style="color:slategray;">/*&nbsp;Parse&nbsp;octal&nbsp;number&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;((argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>][i_offset]&nbsp;&lt;&nbsp;<span style="color:darkgreen;">&apos;0&apos;</span>)&nbsp;||&nbsp;(argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>][i_offset]&nbsp;&gt;&nbsp;<span style="color:darkgreen;">&apos;7&apos;</span>))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_invalid_number,&nbsp;argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_trap&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_trap&nbsp;<span style="color:darkcyan;">*</span>&nbsp;<span style="color:darkturquoise;">8</span>&nbsp;<span style="color:darkcyan;">+</span>&nbsp;argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>][i_offset]&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkgreen;">&apos;0&apos;</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;((i_trap&nbsp;&lt;&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;||&nbsp;(i_trap&nbsp;&gt;&nbsp;<span style="color:darkturquoise;">01777</span>))&nbsp;<span style="color:slategray;">/*&nbsp;Check&nbsp;range&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_address_range,&nbsp;argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">2</span>&nbsp;&lt;&nbsp;argc)&nbsp;<span style="color:slategray;">/*&nbsp;Remove&nbsp;the&nbsp;parameter&nbsp;from&nbsp;the&nbsp;arguments&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_offset&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_offset&nbsp;&lt;&nbsp;argc&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_offset++)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argv[i_offset]&nbsp;<span style="color:darkcyan;">=</span>&nbsp;argv[i_offset&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>];&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argc&#045;&#045;;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_missing_argument,&nbsp;argv[i_count]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_inde&#120;&nbsp;<span style="color:darkcyan;">=</span>&nbsp;strlen(argv[i_count])&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;<span style="color:darkgreen;">&apos;r&apos;</span>&#058;&nbsp;<span style="color:slategray;">/*&nbsp;Read&nbsp;ROM&nbsp;contents&nbsp;&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argv[i_count][i_inde&#120;&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_invalid_argument,&nbsp;argv[i_count][i_inde&#120;&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>&nbsp;&lt;&nbsp;argc)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_read_rom(h_processor,&nbsp;argv[i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>]);&nbsp;<span style="color:slategray;">/*&nbsp;Load&nbsp;user&nbsp;specified&nbsp;settings&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">2</span>&nbsp;&lt;&nbsp;argc)&nbsp;<span style="color:slategray;">/*&nbsp;Remove&nbsp;the&nbsp;parameter&nbsp;from&nbsp;the&nbsp;arguments&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_offset&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_count&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_offset&nbsp;&lt;&nbsp;argc&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_offset++)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argv[i_offset]&nbsp;<span style="color:darkcyan;">=</span>&nbsp;argv[i_offset&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>];&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argc&#045;&#045;;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_missing_argument,&nbsp;argv[i_count]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_inde&#120;&nbsp;<span style="color:darkcyan;">=</span>&nbsp;strlen(argv[i_count])&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;<span style="color:darkgreen;">&apos;s&apos;</span>&#058;&nbsp;<span style="color:slategray;">/*&nbsp;Start&nbsp;in&nbsp;single&nbsp;step&nbsp;mode&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;b_step&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;<span style="color:darkgreen;">&apos;t&apos;</span>&#058;&nbsp;<span style="color:slategray;">/*&nbsp;Enable&nbsp;tracing&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;<span style="color:darkgreen;">&apos;&#045;&apos;</span>&#058;&nbsp;<span style="color:slategray;">/*&nbsp;&apos;&#045;&#045;&apos;&nbsp;terminates&nbsp;command&nbsp;line&nbsp;processing&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_inde&#120;&nbsp;<span style="color:darkcyan;">=</span>&nbsp;strlen(argv[i_count]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_inde&#120;&nbsp;==&nbsp;<span style="color:darkturquoise;">2</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_abort&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<span style="color:slategray;">/*&nbsp;&apos;&#045;&#045;&apos;&nbsp;terminates&nbsp;command&nbsp;line&nbsp;processing&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;&#045;&#045;no&#045;cursor&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_cursor&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<span style="color:slategray;">/*&nbsp;Don&apos;t&nbsp;draw&nbsp;a&nbsp;cursor&nbsp;&#045;&nbsp;unless&nbsp;drawn&nbsp;by&nbsp;the&nbsp;window&nbsp;manager&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;&#045;&#045;cursor&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_cursor&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<span style="color:slategray;">/*&nbsp;Draw&nbsp;cursor&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;&#045;&#045;version&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_version();&nbsp;<span style="color:slategray;">/*&nbsp;Display&nbsp;version&nbsp;information&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;h_msg_licence,&nbsp;__DATE__&nbsp;<span style="color:darkturquoise;">+7</span>,&nbsp;AUTHOR);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:purple;">e&#120;it</span>(<span style="color:darkturquoise;">0</span>);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!strncmp(argv[i_count],&nbsp;<span style="color:darkgreen;">&quot;&#045;&#045;help&quot;</span>,&nbsp;i_inde&#120;))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;c_msg_usage,&nbsp;FILENAME);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:purple;">e&#120;it</span>(<span style="color:darkturquoise;">0</span>);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;If&nbsp;we&nbsp;get&nbsp;here&nbsp;then&nbsp;the&nbsp;we&nbsp;have&nbsp;an&nbsp;invalid&nbsp;long&nbsp;option&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_unrecognised_option,&nbsp;argv[i_count]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_inde&#120;&#045;&#045;;&nbsp;<span style="color:slategray;">/*&nbsp;Leave&nbsp;inde&#120;&nbsp;pointing&nbsp;at&nbsp;end&nbsp;of&nbsp;string&nbsp;(so&nbsp;argv[i_count][i_inde&#120;]&nbsp;=&nbsp;0)&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">default</span>&#058;&nbsp;<span style="color:slategray;">/*&nbsp;If&nbsp;we&nbsp;get&nbsp;here&nbsp;the&nbsp;single&nbsp;letter&nbsp;option&nbsp;is&nbsp;unknown&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_invalid_option,&nbsp;argv[i_count][i_inde&#120;]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_inde&#120;++;&nbsp;<span style="color:slategray;">/*&nbsp;Parse&nbsp;ne&#120;t&nbsp;letter&nbsp;in&nbsp;option&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argv[i_count][<span style="color:darkturquoise;">1</span>]&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_offset&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_count;&nbsp;i_offset&nbsp;&lt;&nbsp;argc&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;i_offset++)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argv[i_offset]&nbsp;<span style="color:darkcyan;">=</span>&nbsp;argv[i_offset&nbsp;<span style="color:darkcyan;">+</span>&nbsp;<span style="color:darkturquoise;">1</span>];&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;argc&#045;&#045;;&nbsp;i_count&#045;&#045;;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;<br>
+&#035;if&nbsp;defined(CONTINIOUS)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argc&nbsp;&gt;&nbsp;<span style="color:darkturquoise;">2</span>)&nbsp;v_error(h_err_invalid_operand);&nbsp;<span style="color:slategray;">/*&nbsp;There&nbsp;should&nbsp;never&nbsp;be&nbsp;more&nbsp;than&nbsp;one&nbsp;command&nbsp;lime&nbsp;parameter&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argc&nbsp;&gt;&nbsp;<span style="color:darkturquoise;">1</span>)&nbsp;s_pathname&nbsp;<span style="color:darkcyan;">=</span>&nbsp;argv[<span style="color:darkturquoise;">1</span>];&nbsp;<span style="color:slategray;">/*&nbsp;Set&nbsp;path&nbsp;name&nbsp;if&nbsp;a&nbsp;parameter&nbsp;was&nbsp;passed&nbsp;and&nbsp;continuous&nbsp;memory&nbsp;is&nbsp;enabled&nbsp;*/</span>&nbsp;<br>
+&#035;else&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(argc&nbsp;&gt;&nbsp;<span style="color:darkturquoise;">1</span>)&nbsp;v_error(h_err_invalid_operand);&nbsp;<span style="color:slategray;">/*&nbsp;There&nbsp;shouldn&apos;t&nbsp;any&nbsp;command&nbsp;line&nbsp;parameters&nbsp;*/</span>&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;i_wait(<span style="color:darkturquoise;">200</span>);&nbsp;<span style="color:slategray;">/*&nbsp;Sleep&nbsp;for&nbsp;200&nbsp;milliseconds&nbsp;to&nbsp;&apos;debounce&apos;&nbsp;keyboard!&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;v_version();&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(&#120;_display&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;OpenDisplay(s_display_name)))&nbsp;v_error&nbsp;(h_err_display,&nbsp;s_display_name);&nbsp;<span style="color:slategray;">/*&nbsp;Open&nbsp;the&nbsp;display&nbsp;and&nbsp;create&nbsp;a&nbsp;new&nbsp;window&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;i_screen&nbsp;<span style="color:darkcyan;">=</span>&nbsp;DefaultScreen(&#120;_display);&nbsp;<span style="color:slategray;">/*&nbsp;Get&nbsp;the&nbsp;default&nbsp;screen&nbsp;for&nbsp;our&nbsp;&#088;&nbsp;server&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;i_screen_width&nbsp;<span style="color:darkcyan;">=</span>&nbsp;DisplayWidth(&#120;_display,&nbsp;i_screen);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;i_screen_height&nbsp;<span style="color:darkcyan;">=</span>&nbsp;DisplayHeight(&#120;_display,&nbsp;i_screen);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;i_background_colour&nbsp;<span style="color:darkcyan;">=</span>&nbsp;BACKGROUND;&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#120;_application_window&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;CreateSimpleWindow(&#120;_display,&nbsp;<span style="color:slategray;">/*&nbsp;Create&nbsp;the&nbsp;application&nbsp;window,&nbsp;as&nbsp;a&nbsp;child&nbsp;of&nbsp;the&nbsp;root&nbsp;window&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;RootWindow(&#120;_display,&nbsp;i_screen),&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(i_screen_width&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;i_window_width)&nbsp;<span style="color:darkcyan;">/</span>&nbsp;<span style="color:darkturquoise;">2</span>&nbsp;,&nbsp;(i_screen_height&nbsp;<span style="color:darkcyan;">&#045;</span>&nbsp;i_window_height)&nbsp;<span style="color:darkcyan;">/</span>&nbsp;<span style="color:darkturquoise;">2</span>,&nbsp;<span style="color:slategray;">/*&nbsp;Window&nbsp;position&nbsp;&#045;ignored&nbsp;?&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_window_width,&nbsp;<span style="color:slategray;">/*&nbsp;Window&nbsp;width&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_window_height,&nbsp;<span style="color:slategray;">/*&nbsp;Window&nbsp;height&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_window_border,&nbsp;<span style="color:slategray;">/*&nbsp;Border&nbsp;width&nbsp;&#045;&nbsp;ignored&nbsp;?&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;BlackPi&#120;el(&#120;_display,&nbsp;i_screen),&nbsp;<span style="color:slategray;">/*&nbsp;Preferred&nbsp;method&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_background_colour);&nbsp;<span style="color:slategray;">/*&nbsp;Background&nbsp;colour&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_size_hint&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;AllocSizeHints();&nbsp;<span style="color:slategray;">/*&nbsp;Set&nbsp;application&nbsp;window&nbsp;size&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_size_hint&#045;&gt;flags&nbsp;<span style="color:darkcyan;">=</span>&nbsp;PMinSize&nbsp;<span style="color:darkcyan;">|</span>&nbsp;PMa&#120;Size;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_size_hint&#045;&gt;min_height&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_window_height;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_size_hint&#045;&gt;min_width&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_window_width;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_size_hint&#045;&gt;ma&#120;_height&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_window_height;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_size_hint&#045;&gt;ma&#120;_width&nbsp;<span style="color:darkcyan;">=</span>&nbsp;i_window_width;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;SetWMNormalHints(&#120;_display,&nbsp;&#120;_application_window,&nbsp;h_size_hint);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;StoreName(&#120;_display,&nbsp;&#120;_application_window,&nbsp;s_title);&nbsp;<span style="color:slategray;">/*&nbsp;Set&nbsp;the&nbsp;window&nbsp;title&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(&#088;GetGeometry(&#120;_display,&nbsp;&#120;_application_window,&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;Get&nbsp;window&nbsp;geometry&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;RootWindow(&#120;_display,&nbsp;i_screen),&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;i_window_left,&nbsp;&amp;i_window_top,&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;i_window_width,&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;i_window_height,&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;i_window_border,&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&amp;i_colour_depth)&nbsp;==&nbsp;False)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_error(h_err_display_properties);&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_colour_depth&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;COLOUR_DEPTH)&nbsp;v_error(h_err_display_colour,&nbsp;COLOUR_DEPTH);&nbsp;<span style="color:slategray;">/*&nbsp;Check&nbsp;colour&nbsp;depth&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(b_cursor)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#120;_cursor&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;CreateFontCursor(&#120;_display,&nbsp;&#088;C_arrow);&nbsp;<span style="color:slategray;">/*&nbsp;Create&nbsp;a&nbsp;&apos;default&apos;&nbsp;cursor&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_set_blank_cursor(&#120;_display,&nbsp;&#120;_application_window,&nbsp;&amp;&#120;_cursor);&nbsp;<span style="color:slategray;">/*&nbsp;Get&nbsp;a&nbsp;blank&nbsp;cursor&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;DefineCursor(&#120;_display,&nbsp;&#120;_application_window,&nbsp;&#120;_cursor);&nbsp;<span style="color:slategray;">/*&nbsp;Define&nbsp;the&nbsp;desired&nbsp;&#088;&nbsp;cursor&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;s_font&nbsp;<span style="color:darkcyan;">=</span>&nbsp;NORMAL_TE&#088;T;&nbsp;<span style="color:slategray;">/*&nbsp;Normal&nbsp;te&#120;t&nbsp;font&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_normal_font&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;LoadQueryFont(&#120;_display,&nbsp;s_font)))&nbsp;v_error(h_err_font,&nbsp;s_font);&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;s_font&nbsp;<span style="color:darkcyan;">=</span>&nbsp;SMALL_TE&#088;T;&nbsp;<span style="color:slategray;">/*&nbsp;Small&nbsp;te&#120;t&nbsp;font&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_small_font&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;LoadQueryFont(&#120;_display,&nbsp;s_font)))&nbsp;v_error(h_err_font,&nbsp;s_font);&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;s_font&nbsp;<span style="color:darkcyan;">=</span>&nbsp;ALTERNATE_TE&#088;T;&nbsp;<span style="color:slategray;">/*&nbsp;Alternate&nbsp;te&#120;t&nbsp;font&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_alternate_font&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;LoadQueryFont(&#120;_display,&nbsp;s_font)))&nbsp;v_error(h_err_font,&nbsp;s_font);&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;s_font&nbsp;<span style="color:darkcyan;">=</span>&nbsp;LARGE_TE&#088;T;&nbsp;<span style="color:slategray;">/*&nbsp;Large&nbsp;te&#120;t&nbsp;font&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_large_font&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;LoadQueryFont(&#120;_display,&nbsp;s_font)))&nbsp;v_error(h_err_font,&nbsp;s_font);&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;v_init_buttons(h_button);&nbsp;<span style="color:slategray;">/*&nbsp;Create&nbsp;buttons&nbsp;*/</span>&nbsp;<br>
+&#035;if&nbsp;defined(SWITCHES)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;v_init_switches(h_switch);&nbsp;<br>
+&#035;endif&nbsp;<br>
+&#035;if&nbsp;defined(LABELS)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;v_init_labels(h_label);&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_display&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_display_create(<span style="color:darkturquoise;">0</span>,&nbsp;BEZEL_LEFT,&nbsp;BEZEL_TOP,&nbsp;BEZEL_WIDTH,&nbsp;BEZEL_HEIGHT,&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DISPLAY_LEFT,&nbsp;DISPLAY_TOP,&nbsp;DISPLAY_WIDTH,&nbsp;DISPLAY_HEIGHT,&nbsp;DIGIT_COLOUR,&nbsp;DIGIT_BACKGROUND,&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DISPLAY_BACKGROUND,&nbsp;BEZEL_COLOUR);&nbsp;<span style="color:slategray;">/*&nbsp;Create&nbsp;display&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&#035;if&nbsp;defined(linu&#120;)&nbsp;||&nbsp;defined(__NetBSD__)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_keyboard&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_keyboard_create(&#120;_display);&nbsp;<span style="color:slategray;">/*&nbsp;Only&nbsp;works&nbsp;with&nbsp;Linu&#120;&nbsp;*/</span>&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;SelectInput(&#120;_display,&nbsp;&#120;_application_window,&nbsp;FocusChangeMask&nbsp;<span style="color:darkcyan;">|</span>&nbsp;E&#120;posureMask&nbsp;<span style="color:darkcyan;">|</span>&nbsp;<span style="color:slategray;">/*&nbsp;Select&nbsp;kind&nbsp;of&nbsp;events&nbsp;we&nbsp;are&nbsp;interested&nbsp;in&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;KeyPressMask&nbsp;<span style="color:darkcyan;">|</span>&nbsp;KeyReleaseMask&nbsp;<span style="color:darkcyan;">|</span>&nbsp;ButtonPressMask&nbsp;<span style="color:darkcyan;">|</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ButtonReleaseMask&nbsp;<span style="color:darkcyan;">|</span>&nbsp;StructureNotifyMask&nbsp;<span style="color:darkcyan;">|</span>&nbsp;SubstructureNotifyMask);&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;wm_delete&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;InternAtom(&#120;_display,&nbsp;<span style="color:darkgreen;">&quot;WM_DELETE_WINDOW&quot;</span>,&nbsp;False);&nbsp;<span style="color:slategray;">/*&nbsp;Create&nbsp;a&nbsp;windows&nbsp;delete&nbsp;message&nbsp;&apos;atom&apos;&#046;&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;SetWMProtocols(&#120;_display,&nbsp;&#120;_application_window,&nbsp;&amp;wm_delete,&nbsp;<span style="color:darkturquoise;">1</span>);&nbsp;<span style="color:slategray;">/*&nbsp;Tell&nbsp;the&nbsp;display&nbsp;to&nbsp;pass&nbsp;wm_delete&nbsp;messages&nbsp;to&nbsp;the&nbsp;application&nbsp;window&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;MapWindow(&#120;_display,&nbsp;&#120;_application_window);&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:slategray;">/*&nbsp;Show&nbsp;window&nbsp;on&nbsp;display&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;RaiseWindow(&#120;_display,&nbsp;&#120;_application_window);&nbsp;<span style="color:slategray;">/*&nbsp;Raise&nbsp;window&nbsp;&#045;&nbsp;ensures&nbsp;e&#120;pose&nbsp;event&nbsp;is&nbsp;raised?&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:purple;">fprintf</span>(stdout,&nbsp;<span style="color:darkgreen;">&quot;ROM&nbsp;Size&nbsp;&#058;&nbsp;%4u&nbsp;words&nbsp;</span><span style="color:brown;">\n</span><span style="color:forestgreen;">&quot;</span>,&nbsp;(<span style="color:dodgerblue;">unsigned</span>)(<span style="color:dodgerblue;">sizeof</span>(i_rom)&nbsp;<span style="color:darkcyan;">/</span>&nbsp;<span style="color:dodgerblue;">sizeof</span>&nbsp;i_rom[<span style="color:darkturquoise;">0</span>]));&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;b_trace;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;step&nbsp;<span style="color:darkcyan;">=</span>&nbsp;b_step;&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(s_pathname&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_restore_state(h_processor);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_read_state(h_processor,&nbsp;s_pathname);&nbsp;<span style="color:slategray;">/*&nbsp;Load&nbsp;user&nbsp;specified&nbsp;settings&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;b_abort&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;i_count&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;<br>
+&nbsp;<br>
+&#035;if&nbsp;defined(SWITCHES)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_switch[<span style="color:darkturquoise;">0</span>]&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:dodgerblue;">NULL</span>)&nbsp;h_processor&#045;&gt;enabled&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_switch[<span style="color:darkturquoise;">0</span>]&#045;&gt;state;&nbsp;<span style="color:slategray;">/*&nbsp;Allow&nbsp;switches&nbsp;to&nbsp;be&nbsp;undefined&nbsp;if&nbsp;not&nbsp;used&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_switch[<span style="color:darkturquoise;">1</span>]&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:dodgerblue;">NULL</span>)&nbsp;h_processor&#045;&gt;select&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_switch[<span style="color:darkturquoise;">1</span>]&#045;&gt;state;&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">while</span>&nbsp;(!b_abort)&nbsp;<span style="color:slategray;">/*&nbsp;Main&nbsp;program&nbsp;event&nbsp;loop&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_count&#045;&#045;;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_count&nbsp;&lt;&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_display_update(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_display,&nbsp;h_processor);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_display_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_display);&nbsp;<span style="color:slategray;">/*&nbsp;Redraw&nbsp;display&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_count&nbsp;<span style="color:darkcyan;">=</span>&nbsp;INTERVAL;&nbsp;<br>
+&#035;if&nbsp;defined(HP67)&nbsp;||&nbsp;defined(HP41)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_wait(INTERVAL&nbsp;<span style="color:darkcyan;">/</span>&nbsp;<span style="color:darkturquoise;">4</span>);&nbsp;<span style="color:slategray;">/*&nbsp;Sleep&nbsp;for&nbsp;~6&#046;25&nbsp;ms&nbsp;per&nbsp;tick&nbsp;*/</span>&nbsp;<br>
+&#035;elif&nbsp;defined&nbsp;(HP10)&nbsp;||&nbsp;defined&nbsp;(HP11)&nbsp;||&nbsp;defined&nbsp;(HP12)&nbsp;||&nbsp;defined&nbsp;(HP15)&nbsp;||&nbsp;defined&nbsp;(HP16)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_wait(INTERVAL&nbsp;<span style="color:darkcyan;">/</span>&nbsp;<span style="color:darkturquoise;">3</span>);&nbsp;<span style="color:slategray;">/*&nbsp;Sleep&nbsp;for&nbsp;~8&#046;33&nbsp;ms&nbsp;per&nbsp;tick&nbsp;*/</span>&nbsp;<br>
+&#035;elif&nbsp;defined(HP31)&nbsp;||&nbsp;defined(HP32)&nbsp;||&nbsp;defined(HP33)&nbsp;||&nbsp;defined(HP34)&nbsp;||&nbsp;defined(HP37)&nbsp;||&nbsp;defined(HP38)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_wait(INTERVAL&nbsp;<span style="color:darkcyan;">/</span>&nbsp;<span style="color:darkturquoise;">3</span>);&nbsp;<span style="color:slategray;">/*&nbsp;Sleep&nbsp;for&nbsp;~8&#046;33&nbsp;ms&nbsp;per&nbsp;tick&nbsp;*/</span>&nbsp;<br>
+&#035;else&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_wait(INTERVAL&nbsp;<span style="color:darkcyan;">/</span>&nbsp;<span style="color:darkturquoise;">2</span>);&nbsp;<span style="color:slategray;">/*&nbsp;Sleep&nbsp;for&nbsp;~12&#046;5&nbsp;ms&nbsp;per&nbsp;tick&nbsp;*/</span>&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_ticks&nbsp;&gt;&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;i_ticks&nbsp;&#045;=&nbsp;<span style="color:darkturquoise;">1</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(i_ticks&nbsp;==&nbsp;<span style="color:darkturquoise;">0</span>)&nbsp;b_abort&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(((h_processor&#045;&gt;pc&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;fff)&nbsp;==&nbsp;i_breakpoint)&nbsp;||&nbsp;(h_processor&#045;&gt;rom[h_processor&#045;&gt;pc]&nbsp;==&nbsp;i_trap))&nbsp;<span style="color:slategray;">/*&nbsp;Check&nbsp;for&nbsp;Breakpoint&nbsp;or&nbsp;Instruction&nbsp;Trap&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!h_processor&#045;&gt;trace&nbsp;||&nbsp;!h_processor&#045;&gt;step)&nbsp;<span style="color:purple;">fprintf</span>(stderr,&nbsp;<span style="color:darkgreen;">&quot;**&nbsp;break&nbsp;**</span><span style="color:brown;">\n</span><span style="color:forestgreen;">&quot;</span>);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_processor&#045;&gt;step&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(b_run)&nbsp;v_processor_tick(h_processor);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_processor&#045;&gt;step)&nbsp;b_run&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">while</span>&nbsp;(&#088;Pending(&#120;_display))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&#088;Ne&#120;tEvent(&#120;_display,&nbsp;&amp;&#120;_event);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">switch</span>&nbsp;(&#120;_event&#046;type)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;FocusOut&#058;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_pressed&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_pressed&#045;&gt;state&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_button_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_pressed);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;keypressed&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<span style="color:slategray;">/*&nbsp;Don&apos;t&nbsp;clear&nbsp;the&nbsp;status&nbsp;bit&nbsp;here!!&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&#035;if&nbsp;defined(linu&#120;)&nbsp;||&nbsp;defined(__NetBSD__)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;KeyPress&nbsp;&#058;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_key_pressed(h_keyboard,&nbsp;&#120;_display,&nbsp;&#120;_event&#046;&#120;key&#046;keycode,&nbsp;&#120;_event&#046;&#120;key&#046;state);&nbsp;<span style="color:slategray;">/*&nbsp;Attempts&nbsp;to&nbsp;translate&nbsp;a&nbsp;key&nbsp;code&nbsp;into&nbsp;a&nbsp;character&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_keyboard&#045;&gt;key&nbsp;==&nbsp;(&#088;K_BackSpace&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f))&nbsp;h_keyboard&#045;&gt;key&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;K_Escape&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f;&nbsp;<span style="color:slategray;">/*&nbsp;Map&nbsp;backspace&nbsp;to&nbsp;escape&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_keyboard&#045;&gt;key&nbsp;==&nbsp;(&#088;K_Z&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f))&nbsp;<span style="color:slategray;">/*&nbsp;Ctrl&#045;z&nbsp;to&nbsp;e&#120;it&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_abort&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_keyboard&#045;&gt;key&nbsp;==&nbsp;(&#088;K_Q&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f))&nbsp;<span style="color:slategray;">/*&nbsp;Ctrl&#045;Q&nbsp;to&nbsp;resume&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;step&nbsp;<span style="color:darkcyan;">=</span>&nbsp;!(b_run&nbsp;&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_keyboard&#045;&gt;key&nbsp;==&nbsp;(&#088;K_S&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f))&nbsp;<span style="color:slategray;">/*&nbsp;Ctrl&#045;S&nbsp;or&nbsp;space&nbsp;to&nbsp;single&nbsp;step&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_processor&#045;&gt;step&nbsp;<span style="color:darkcyan;">=</span>&nbsp;b_run&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_keyboard&#045;&gt;key&nbsp;==&nbsp;(&#088;K_T&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f))&nbsp;<span style="color:slategray;">/*&nbsp;Ctrl&#045;T&nbsp;to&nbsp;toggle&nbsp;tracing&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;trace&nbsp;<span style="color:darkcyan;">=</span>&nbsp;!h_processor&#045;&gt;trace;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_keyboard&#045;&gt;key&nbsp;==&nbsp;(&#088;K_R&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f))&nbsp;<span style="color:slategray;">/*&nbsp;Ctrl&#045;R&nbsp;to&nbsp;display&nbsp;internal&nbsp;CPU&nbsp;registers&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_fprint_registers(stdout,&nbsp;h_processor);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_keyboard&#045;&gt;key&nbsp;==&nbsp;(&#088;K_C&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f))&nbsp;<span style="color:slategray;">/*&nbsp;Ctrl&#045;C&nbsp;to&nbsp;reset&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_processor_reset(h_processor);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(s_pathname&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_restore_state(h_processor);&nbsp;<span style="color:slategray;">/*&nbsp;Load&nbsp;current&nbsp;saved&nbsp;settings&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_read_state(h_processor,&nbsp;s_pathname);&nbsp;<span style="color:slategray;">/*&nbsp;Load&nbsp;user&nbsp;specified&nbsp;settings&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;b_run&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;{&nbsp;<span style="color:slategray;">/*&nbsp;Check&nbsp;for&nbsp;matching&nbsp;button&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_count;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;i_count&nbsp;&lt;&nbsp;BUTTONS;&nbsp;i_count++)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_pressed&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_button_key_pressed(h_button[i_count],&nbsp;h_keyboard&#045;&gt;key);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_pressed&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:dodgerblue;">NULL</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_pressed&#045;&gt;state&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_button_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_pressed);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;code&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_pressed&#045;&gt;inde&#120;;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;keypressed&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&#035;if&nbsp;!defined(SWITCHES)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;enabled&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<span style="color:slategray;">/*&nbsp;Any&nbsp;key&nbsp;press&nbsp;wil&nbsp;wake&nbsp;up&nbsp;the&nbsp;processor&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;sleep&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;KeyRelease&nbsp;&#058;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_key_released(h_keyboard,&nbsp;&#120;_display,&nbsp;&#120;_event&#046;&#120;key&#046;keycode,&nbsp;&#120;_event&#046;&#120;key&#046;state);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_keyboard&#045;&gt;key&nbsp;==&nbsp;(&#088;K_BackSpace&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f))&nbsp;h_keyboard&#045;&gt;key&nbsp;<span style="color:darkcyan;">=</span>&nbsp;&#088;K_Escape&nbsp;<span style="color:darkcyan;">&amp;</span>&nbsp;0&#120;1f;&nbsp;<span style="color:slategray;">/*&nbsp;Map&nbsp;backspace&nbsp;to&nbsp;escape&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_pressed&nbsp;!<span style="color:darkcyan;">=</span>&nbsp;<span style="color:dodgerblue;">NULL</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_keyboard&#045;&gt;key&nbsp;==&nbsp;h_pressed&#045;&gt;key)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_pressed&#045;&gt;state&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_button_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_pressed);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;keypressed&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<span style="color:slategray;">/*&nbsp;Don&apos;t&nbsp;clear&nbsp;the&nbsp;status&nbsp;bit&nbsp;here!!&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;ButtonPress&nbsp;&#058;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(&#120;_event&#046;&#120;button&#046;button&nbsp;==&nbsp;<span style="color:darkturquoise;">1</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_count;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;i_count&nbsp;&lt;&nbsp;<span style="color:dodgerblue;">sizeof</span>(h_button)&nbsp;<span style="color:darkcyan;">/</span>&nbsp;<span style="color:dodgerblue;">sizeof</span>(*h_button);&nbsp;i_count++)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_pressed&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_button_pressed(h_button[i_count],&nbsp;&#120;_event&#046;&#120;button&#046;&#120;,&nbsp;&#120;_event&#046;&#120;button&#046;y);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_pressed&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_pressed&#045;&gt;state&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_button_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_pressed);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;code&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_pressed&#045;&gt;inde&#120;;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;keypressed&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&#035;if&nbsp;!defined(SWITCHES)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;enabled&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<span style="color:slategray;">/*&nbsp;Any&nbsp;key&nbsp;press&nbsp;wil&nbsp;wake&nbsp;up&nbsp;the&nbsp;processor&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;sleep&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&#035;if&nbsp;defined(SWITCHES)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_pressed&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>)&nbsp;{&nbsp;<span style="color:slategray;">/*&nbsp;It&nbsp;wasn&apos;t&nbsp;a&nbsp;button&nbsp;that&nbsp;was&nbsp;pressed&nbsp;check&nbsp;the&nbsp;switches&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_switch_pressed(h_switch[<span style="color:darkturquoise;">0</span>],&nbsp;&#120;_event&#046;&#120;button&#046;&#120;,&nbsp;&#120;_event&#046;&#120;button&#046;y)&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_switch[<span style="color:darkturquoise;">0</span>]&#045;&gt;state&nbsp;<span style="color:darkcyan;">=</span>&nbsp;!(h_switch[<span style="color:darkturquoise;">0</span>]&#045;&gt;state);&nbsp;<span style="color:slategray;">/*&nbsp;Toggle&nbsp;switch&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_switch_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_switch[<span style="color:darkturquoise;">0</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_switch[<span style="color:darkturquoise;">0</span>]&#045;&gt;state)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_processor_reset(h_processor);&nbsp;<span style="color:slategray;">/*&nbsp;Reset&nbsp;the&nbsp;processor&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_restore_state(h_processor);&nbsp;<span style="color:slategray;">/*&nbsp;Restore&nbsp;saved&nbsp;settings&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">else</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;v_save_state(h_processor);&nbsp;<span style="color:slategray;">/*&nbsp;Save&nbsp;current&nbsp;settings&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;enabled&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<span style="color:slategray;">/*&nbsp;Disable&nbsp;the&nbsp;processor&nbsp;*/</span>&nbsp;<br>
+&#035;if&nbsp;defined(HP67)&nbsp;||&nbsp;defined(HP41)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_ticks&nbsp;<span style="color:darkcyan;">=</span>&nbsp;DELAY&nbsp;<span style="color:darkcyan;">*</span>&nbsp;<span style="color:darkturquoise;">4</span>;&nbsp;<span style="color:slategray;">/*&nbsp;Set&nbsp;count&nbsp;down&nbsp;*/</span>&nbsp;<br>
+&#035;elif&nbsp;defined&nbsp;(HP10)&nbsp;||&nbsp;defined&nbsp;(HP11)&nbsp;||&nbsp;defined&nbsp;(HP12)&nbsp;||&nbsp;defined&nbsp;(HP15)&nbsp;||&nbsp;defined&nbsp;(HP16)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_ticks&nbsp;<span style="color:darkcyan;">=</span>&nbsp;DELAY&nbsp;<span style="color:darkcyan;">*</span>&nbsp;<span style="color:darkturquoise;">3</span>;&nbsp;<br>
+&#035;elif&nbsp;defined(HP31)&nbsp;||&nbsp;defined(HP32)&nbsp;||&nbsp;defined(HP33)&nbsp;||&nbsp;defined(HP34)&nbsp;||&nbsp;defined(HP37)&nbsp;||&nbsp;defined(HP38)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_ticks&nbsp;<span style="color:darkcyan;">=</span>&nbsp;DELAY&nbsp;<span style="color:darkcyan;">*</span>&nbsp;<span style="color:darkturquoise;">3</span>;&nbsp;<br>
+&#035;else&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_ticks&nbsp;<span style="color:darkcyan;">=</span>&nbsp;DELAY&nbsp;<span style="color:darkcyan;">*</span>&nbsp;<span style="color:darkturquoise;">2</span>;&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_switch_pressed(h_switch[<span style="color:darkturquoise;">1</span>],&nbsp;&#120;_event&#046;&#120;button&#046;&#120;,&nbsp;&#120;_event&#046;&#120;button&#046;y)&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_switch[<span style="color:darkturquoise;">1</span>]&#045;&gt;state&nbsp;<span style="color:darkcyan;">=</span>&nbsp;!(h_switch[<span style="color:darkturquoise;">1</span>]&#045;&gt;state);&nbsp;<span style="color:slategray;">/*&nbsp;Toggle&nbsp;switch&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_switch_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_switch[<span style="color:darkturquoise;">1</span>]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;select&nbsp;<span style="color:darkcyan;">=</span>&nbsp;h_switch[<span style="color:darkturquoise;">1</span>]&#045;&gt;state;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;ButtonRelease&nbsp;&#058;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(&#120;_event&#046;&#120;button&#046;button&nbsp;==&nbsp;<span style="color:darkturquoise;">1</span>)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_pressed&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_pressed&#045;&gt;state&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_button_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_pressed);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;h_processor&#045;&gt;keypressed&nbsp;<span style="color:darkcyan;">=</span>&nbsp;False;&nbsp;<span style="color:slategray;">/*&nbsp;Don&apos;t&nbsp;clear&nbsp;the&nbsp;status&nbsp;bit&nbsp;here!!&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&#035;if&nbsp;defined(SWITCHES)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(h_pressed&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>)&nbsp;<span style="color:slategray;">/*&nbsp;It&nbsp;wasn&apos;t&nbsp;a&nbsp;button&nbsp;that&nbsp;was&nbsp;released&nbsp;so&nbsp;check&nbsp;the&nbsp;switches&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(!(h_switch_pressed(h_switch[<span style="color:darkturquoise;">0</span>],&nbsp;&#120;_event&#046;&#120;button&#046;&#120;,&nbsp;&#120;_event&#046;&#120;button&#046;y)&nbsp;==&nbsp;<span style="color:dodgerblue;">NULL</span>))&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_ticks&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">&#045;1</span>;&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;E&#120;pose&nbsp;&#058;&nbsp;<span style="color:slategray;">/*&nbsp;Draw&nbsp;or&nbsp;redraw&nbsp;the&nbsp;window&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">int</span>&nbsp;i_count;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_display_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_display)<span style="color:slategray;">;/*&nbsp;Draw&nbsp;display&nbsp;*/</span>&nbsp;<br>
+&#035;if&nbsp;defined(LABELS)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;i_count&nbsp;&lt;&nbsp;LABELS;&nbsp;i_count++)&nbsp;<span style="color:slategray;">/*&nbsp;Draw&nbsp;labels&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_label_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_label[i_count]);&nbsp;<br>
+&#035;endif&nbsp;<br>
+&#035;if&nbsp;defined(SWITCHES)&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;i_count&nbsp;&lt;&nbsp;SWITCHES;&nbsp;i_count++)&nbsp;<span style="color:slategray;">/*&nbsp;Draw&nbsp;switches&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_switch_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_switch[i_count]);&nbsp;<br>
+&#035;endif&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">for</span>&nbsp;(i_count&nbsp;<span style="color:darkcyan;">=</span>&nbsp;<span style="color:darkturquoise;">0</span>;&nbsp;i_count&nbsp;&lt;&nbsp;BUTTONS;&nbsp;i_count++)&nbsp;<span style="color:slategray;">/*&nbsp;Draw&nbsp;buttons&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i_button_draw(&#120;_display,&nbsp;&#120;_application_window,&nbsp;i_screen,&nbsp;h_button[i_count]);&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">case</span>&nbsp;ClientMessage&nbsp;&#058;&nbsp;<span style="color:slategray;">/*&nbsp;Message&nbsp;from&nbsp;window&nbsp;manager&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">if</span>&nbsp;(&#120;_event&#046;&#120;client&#046;data&#046;l[<span style="color:darkturquoise;">0</span>]&nbsp;==&nbsp;wm_delete)&nbsp;b_abort&nbsp;<span style="color:darkcyan;">=</span>&nbsp;True;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:dodgerblue;">break</span>;&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;&nbsp;&nbsp;}&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;v_save_state(h_processor);&nbsp;<span style="color:slategray;">/*&nbsp;Save&nbsp;state&nbsp;*/</span>&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;/**&nbsp;&#088;FreeCursor&nbsp;(&#120;_display,&nbsp;&#120;_cursor);&nbsp;<span style="color:slategray;">/*&nbsp;Free&nbsp;cursor&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;DestroyWindow(&#120;_display,&nbsp;&#120;_application_window);&nbsp;<span style="color:slategray;">/*&nbsp;Close&nbsp;connection&nbsp;to&nbsp;server&nbsp;*/</span>&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&#088;CloseDisplay(&#120;_display);&nbsp;<br>
+&nbsp;<br>
+&nbsp;&nbsp;&nbsp;<span style="color:purple;">e&#120;it</span>(<span style="color:darkturquoise;">0</span>);&nbsp;<br>
+}&nbsp;<br>
+</div><br>
